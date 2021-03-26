@@ -1,0 +1,17 @@
+{
+  "name": "MelonnBackend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/tomsawyer1989/MelonnBackend.git",
+  "author": "Jorge Leonardo Herrera Ortiz <herrera.jorge@correounivalle.edu.co>",
+  "license": "MIT",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon --watch index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "pg": "^8.5.1"
+  }
+}
