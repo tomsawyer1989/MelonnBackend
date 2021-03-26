@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+let moment = require('moment');
 
 const orderRouter = express.Router();
 orderRouter.use(bodyParser.json());
@@ -21,7 +22,10 @@ orderRouter.route('/')
         id = id + 1;
         const order = req.body;
         order.id = id;
+        order.date = moment(new Date()).format('YYYY-MM-DD');
+        order.orderNumberInternal = 'MSE' + Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 100);
         orderList.push(order);
+        console.log(order)
         res.send(order);
     } 
     catch (error) {
