@@ -91,6 +91,16 @@ const getValidateBusinessDay = (nextBusinessDays) => {
     return boolean;
 }
 
+const getValidateTimeOfDay = (fromTimeOfDay, toTimeOfDay) => {
+    let hour = moment(new Date()).format('H');
+
+    if (hour <= toTimeOfDay && hour >= fromTimeOfDay) {
+        return true;
+    }
+
+    return false;
+}
+
 const promiseNull = () => {
     return({
         pack_promise_min: null,
@@ -109,8 +119,14 @@ orderRouter.route('/promises')
     try {
         const nextBusinessDays = await getNextBussinessDays();
         const rules = await getRules(1);    // id order
+
+        const dayType = rules.availability.byRequestTime.dayType;
+        const fromTimeOfDay = rules.availability.byRequestTime.fromTimeOfDay;
+        const toTimeOfDay = rules.availability.byRequestTime.toTimeOfDay;
+
         const validateWeight = getValidateWeight(rules, 100); // weight order
         const validateBusinessDay = getValidateBusinessDay(nextBusinessDays);
+        const validateTimeOfDay = getValidateTimeOfDay(fromTimeOfDay, toTimeOfDay);
 
         if (!validateWeight) {
             res.send(promiseNull());
@@ -118,34 +134,37 @@ orderRouter.route('/promises')
             return false;
         }
 
-        const dayType = rules.availability.byRequestTime.dayType;
-        const fromTimeOfDay = rules.availability.byRequestTime.fromTimeOfDay;
-        const toTimeOfDay = rules.availability.byRequestTime.toTimeOfDay;
-
         switch (dayType) {
-            case 'ANY':
-                
-                break;
-
             case 'BUSINESS':
-            
+                if (!validateBusinessDay) {
+                    res.send(promiseNull());
+
+                    return false;
+                }
                 break;
 
             case 'NON-BUSINESS':
                 console.log('NOT FOR NOW');
-                break;
+                res.send(promiseNull());
+
+                return false;
 
             case 'WEEKEND':
                 console.log('NOT FOR NOW');
-                break;
+                res.send(promiseNull());
+
+                return false;
         
             default:
                 break;
         }
 
-        console.log(validateBusinessDay);
-        console.log(nextBusinessDays);
-        console.log(validateWeight);
+        if (!validateTimeOfDay) {
+            res.send(promiseNull());
+
+            return false;
+        }
+
         res.send('promises');
     } 
     catch (error) {
