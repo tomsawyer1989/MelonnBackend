@@ -27,7 +27,6 @@ orderRouter.route('/')
         order.date = moment(new Date()).format('YYYY-MM-DD');
         order.orderNumberInternal = 'MSE' + Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 100);
         orderList.push(order);
-        console.log(order)
         res.send(order);
     } 
     catch (error) {
@@ -85,8 +84,8 @@ const getValidateWeight = (rules, weight) => {
     return false;
 }
 
-const getValidateBusinessDay = (nextBusinessDays) => {
-    const boolean = nextBusinessDays.some(item => item === moment(new Date()).format('YYYY-MM-DD'));
+const getValidateBusinessDay = (nextBusinessDays, nowDateTime) => {
+    const boolean = nextBusinessDays.some(item => item === nowDateTime);
 
     return boolean;
 }
@@ -99,6 +98,129 @@ const getValidateTimeOfDay = (fromTimeOfDay, toTimeOfDay) => {
     }
 
     return false;
+}
+
+const getPromise = (type, nowDateTime, deltaHours, nextBusinessDays, deltaBusinessDays, timeOfDay) => {
+    let promise = null;
+
+    switch (type) {
+        case 'NULL':
+            promise = null;
+            break;
+
+        case 'DELTA-HOURS':
+            promise = nowDateTime + deltaHours;
+            break;
+
+        case 'DELTA-BUSINESSDAYS':
+            let date = nextBusinessDays[deltaBusinessDays - 1];
+            let time = timeOfDay;
+            promise = date + ' at ' + time;
+            break;
+    
+        default:
+            break;
+    }
+
+    return promise;
+}
+
+const casesListBucle = (caseItem, validateBusinessDay, nowDateTime, nextBusinessDays) => {
+    const dayType = caseItem.condition.byRequestTime.dayType;
+    const fromTimeOfDay = caseItem.condition.byRequestTime.fromTimeOfDay;
+    const toTimeOfDay = caseItem.condition.byRequestTime.toTimeOfDay;
+
+    const validateTimeOfDay = getValidateTimeOfDay(fromTimeOfDay, toTimeOfDay);
+
+    switch (dayType) {
+        case 'BUSINESS':
+            if (!validateBusinessDay) {
+                return false;
+            }
+            break;
+
+        case 'NON-BUSINESS':
+            console.log('NOT FOR NOW');
+            res.send(promiseNull());
+
+            return false;
+
+        case 'WEEKEND':
+            console.log('NOT FOR NOW');
+            res.send(promiseNull());
+
+            return false;
+    
+        default:
+            break;
+    }
+
+    if (!validateTimeOfDay) {
+        return false;
+    }
+
+    const workingCase = caseItem;
+
+    let minType = workingCase.packPromise.min.type;
+    let minDeltaHours = workingCase.packPromise.min.deltaHours;
+    let minDeltaBusinessDays = workingCase.packPromise.min.deltaBusinessDays;
+    let minTimeOfDay = workingCase.packPromise.min.timeOfDay;
+    let maxType = workingCase.packPromise.max.type;
+    let maxDeltaHours = workingCase.packPromise.max.deltaHours;
+    let maxDeltaBusinessDays = workingCase.packPromise.max.deltaBusinessDays;
+    let maxTimeOfDay = workingCase.packPromise.max.timeOfDay;
+
+    let packPromiseMin= getPromise(minType, nowDateTime, minDeltaHours, nextBusinessDays, minDeltaBusinessDays, minTimeOfDay);
+    let packPromiseMax= getPromise(maxType, nowDateTime, maxDeltaHours, nextBusinessDays, maxDeltaBusinessDays, maxTimeOfDay);
+
+    minType = workingCase.shipPromise.min.type;
+    minDeltaHours = workingCase.shipPromise.min.deltaHours;
+    minDeltaBusinessDays = workingCase.shipPromise.min.deltaBusinessDays;
+    minTimeOfDay = workingCase.shipPromise.min.timeOfDay;
+    maxType = workingCase.shipPromise.max.type;
+    maxDeltaHours = workingCase.shipPromise.max.deltaHours;
+    maxDeltaBusinessDays = workingCase.shipPromise.max.deltaBusinessDays;
+    maxTimeOfDay = workingCase.shipPromise.max.timeOfDay;
+
+    let shipPromiseMin= getPromise(minType, nowDateTime, minDeltaHours, nextBusinessDays, minDeltaBusinessDays, minTimeOfDay);
+    let shipPromiseMax= getPromise(maxType, nowDateTime, maxDeltaHours, nextBusinessDays, maxDeltaBusinessDays, maxTimeOfDay);
+
+    minType = workingCase.deliveryPromise.min.type;
+    minDeltaHours = workingCase.deliveryPromise.min.deltaHours;
+    minDeltaBusinessDays = workingCase.deliveryPromise.min.deltaBusinessDays;
+    minTimeOfDay = workingCase.deliveryPromise.min.timeOfDay;
+    maxType = workingCase.deliveryPromise.max.type;
+    maxDeltaHours = workingCase.deliveryPromise.max.deltaHours;
+    maxDeltaBusinessDays = workingCase.deliveryPromise.max.deltaBusinessDays;
+    maxTimeOfDay = workingCase.deliveryPromise.max.timeOfDay;
+
+    let deliveryPromiseMin= getPromise(minType, nowDateTime, minDeltaHours, nextBusinessDays, minDeltaBusinessDays, minTimeOfDay);
+    let deliveryPromiseMax= getPromise(maxType, nowDateTime, maxDeltaHours, nextBusinessDays, maxDeltaBusinessDays, maxTimeOfDay);
+
+    minType = workingCase.readyPickupPromise.min.type;
+    minDeltaHours = workingCase.readyPickupPromise.min.deltaHours;
+    minDeltaBusinessDays = workingCase.readyPickupPromise.min.deltaBusinessDays;
+    minTimeOfDay = workingCase.readyPickupPromise.min.timeOfDay;
+    maxType = workingCase.readyPickupPromise.max.type;
+    maxDeltaHours = workingCase.readyPickupPromise.max.deltaHours;
+    maxDeltaBusinessDays = workingCase.readyPickupPromise.max.deltaBusinessDays;
+    maxTimeOfDay = workingCase.readyPickupPromise.max.timeOfDay;
+
+    let readyPickupPromiseMin= getPromise(minType, nowDateTime, minDeltaHours, nextBusinessDays, minDeltaBusinessDays, minTimeOfDay);
+    let readyPickupPromiseMax= getPromise(maxType, nowDateTime, maxDeltaHours, nextBusinessDays, maxDeltaBusinessDays, maxTimeOfDay);
+
+    res.send({
+        pack_promise_min: packPromiseMin,
+        pack_promise_max: packPromiseMax,
+        ship_promise_min: shipPromiseMin,
+        ship_promise_max: shipPromiseMax,
+        delivery_promise_min: deliveryPromiseMin,
+        delivery_promise_max: deliveryPromiseMax,
+        ready_pickup_promise_min: readyPickupPromiseMin,
+        ready_pickup_promise_max: readyPickupPromiseMax,
+    });
+
+    return true;
 }
 
 const promiseNull = () => {
@@ -117,15 +239,18 @@ const promiseNull = () => {
 orderRouter.route('/promises')
 .get(async (req, res) => {
     try {
+        const nowDateTime = moment(new Date()).format('YYYY-MM-DD');
         const nextBusinessDays = await getNextBussinessDays();
-        const rules = await getRules(1);    // id order
+        const rules = await getRules(6);    // id order
 
         const dayType = rules.availability.byRequestTime.dayType;
         const fromTimeOfDay = rules.availability.byRequestTime.fromTimeOfDay;
         const toTimeOfDay = rules.availability.byRequestTime.toTimeOfDay;
 
+        const casesList = rules.promisesParameters.cases;
+
         const validateWeight = getValidateWeight(rules, 100); // weight order
-        const validateBusinessDay = getValidateBusinessDay(nextBusinessDays);
+        const validateBusinessDay = getValidateBusinessDay(nextBusinessDays, nowDateTime);
         const validateTimeOfDay = getValidateTimeOfDay(fromTimeOfDay, toTimeOfDay);
 
         if (!validateWeight) {
@@ -163,6 +288,18 @@ orderRouter.route('/promises')
             res.send(promiseNull());
 
             return false;
+        }
+
+        let priority = 0;
+
+        for (let i = 0; i < casesList.length; i ++) {
+            priority ++;
+            
+            if (casesList[i].priority === priority) {
+                if (casesListBucle(casesList[i], validateBusinessDay, nowDateTime, nextBusinessDays)) {
+                    i = casesList.length;
+                }
+            }
         }
 
         res.send('promises');
