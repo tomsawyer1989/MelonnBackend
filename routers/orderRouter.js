@@ -205,7 +205,7 @@ const casesListBucle = (caseItem, validateBusinessDay, nowDateTime, nextBusiness
     let readyPickUpPromiseMin= getPromise(minType, nowDateTime, minDeltaHours, nextBusinessDays, minDeltaBusinessDays, minTimeOfDay);
     let readyPickUpPromiseMax= getPromise(maxType, nowDateTime, maxDeltaHours, nextBusinessDays, maxDeltaBusinessDays, maxTimeOfDay);
 
-    res.send({
+    return ({
         pack_promise_min: packPromiseMin,
         pack_promise_max: packPromiseMax,
         ship_promise_min: shipPromiseMin,
@@ -215,8 +215,6 @@ const casesListBucle = (caseItem, validateBusinessDay, nowDateTime, nextBusiness
         ready_pickup_promise_min: readyPickUpPromiseMin,
         ready_pickup_promise_max: readyPickUpPromiseMax,
     });
-
-    return true;
 }
 
 const promiseNull = () => {
@@ -287,24 +285,25 @@ orderRouter.route('/promises')
         }
 
         let priority = 0;
-        let result = false;
+        let result = null;
 
         for (let i = 0; i < casesList.length; i ++) {
             priority ++;
             
             if (casesList[i].priority === priority) {
-                if (casesListBucle(casesList[i], validateBusinessDay, nowDateTime, nextBusinessDays)) {
-                    result = true;
+                result = casesListBucle(casesList[i], validateBusinessDay, nowDateTime, nextBusinessDays);
+
+                if (result) {
                     i = casesList.length;
-                }
-                else {
-                    result = false;
                 }
             }
         }
 
         if (!result) {
             res.send(promiseNull());
+        }
+        else {
+            res.send(result);
         }
     } 
     catch (error) {
