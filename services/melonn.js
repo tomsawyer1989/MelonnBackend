@@ -1,9 +1,10 @@
-import { methodsListEndpoint, offDaysListEndpoint } from './config/endpoints';
-import { optionsGET } from './config/options';
+const endpoints = require('./config/endpoints');
+const options = require('./config/options');
+const fetch = require('node-fetch');
 
-export const getMethodsList = async () => {
+exports.getMethodsList = async () => {
     try {
-      const response = await fetch(methodsListEndpoint(), optionsGET());
+      const response = await fetch(endpoints.methodsListEndpoint(), options.optionsGET());
   
       if (!response.ok) {
         return {
@@ -25,9 +26,9 @@ export const getMethodsList = async () => {
     }
 }
 
-export const getMethodDetails = async (params) => {
+exports.getMethodDetails = async (params) => {
     try {
-      const response = await fetch(methodsListEndpoint(params), optionsGET());
+      const response = await fetch(endpoints.methodsListEndpoint(params), options.optionsGET());
   
       if (!response.ok) {
         return {
@@ -49,9 +50,9 @@ export const getMethodDetails = async (params) => {
     }
 }
 
-export const getOffDaysList = async () => {
+exports.getOffDaysList = async () => {
     try {
-      const response = await fetch(offDaysListEndpoint(), optionsGET());
+      const response = await fetch(endpoints.offDaysListEndpoint(), options.optionsGET());
   
       if (!response.ok) {
         return {
