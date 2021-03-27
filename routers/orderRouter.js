@@ -47,6 +47,20 @@ orderRouter.route('/:id')
     }
 });
 
+orderRouter.route('/methods/')
+.get(async (req, res) => {
+    try {
+        const response = await melonn.getMethodsList();
+
+        if (response.success) {
+            res.send(response.methods);
+        }
+    } 
+    catch (error) {
+        console.log(error);
+    }
+});
+
 const getNextBussinessDays = async () => {
     const response = await melonn.getOffDaysList();
     
@@ -65,8 +79,8 @@ const getNextBussinessDays = async () => {
     }
 }
 
-const getRules = async (orderId) => {
-    const response = await melonn.getMethodDetails(orderId);
+const getRules = async (methodId) => {
+    const response = await melonn.getMethodDetails(methodId);
 
     if (response.success) {
         return response.method.rules;
@@ -230,12 +244,12 @@ const promiseNull = () => {
     });
 }
 
-orderRouter.route('/promises')
+orderRouter.route('/promises/:id')
 .get(async (req, res) => {
     try {
         const nowDateTime = moment(new Date()).format('YYYY-MM-DD');
         const nextBusinessDays = await getNextBussinessDays();
-        const rules = await getRules(1);    // id order
+        const rules = await getRules(parseInt(req.params.id));    // id method
 
         const dayType = rules.availability.byRequestTime.dayType;
         const fromTimeOfDay = rules.availability.byRequestTime.fromTimeOfDay;
