@@ -141,14 +141,10 @@ const casesListBucle = (caseItem, validateBusinessDay, nowDateTime, nextBusiness
 
         case 'NON-BUSINESS':
             console.log('NOT FOR NOW');
-            res.send(promiseNull());
-
             return false;
 
         case 'WEEKEND':
             console.log('NOT FOR NOW');
-            res.send(promiseNull());
-
             return false;
     
         default:
@@ -197,17 +193,17 @@ const casesListBucle = (caseItem, validateBusinessDay, nowDateTime, nextBusiness
     let deliveryPromiseMin= getPromise(minType, nowDateTime, minDeltaHours, nextBusinessDays, minDeltaBusinessDays, minTimeOfDay);
     let deliveryPromiseMax= getPromise(maxType, nowDateTime, maxDeltaHours, nextBusinessDays, maxDeltaBusinessDays, maxTimeOfDay);
 
-    minType = workingCase.readyPickupPromise.min.type;
-    minDeltaHours = workingCase.readyPickupPromise.min.deltaHours;
-    minDeltaBusinessDays = workingCase.readyPickupPromise.min.deltaBusinessDays;
-    minTimeOfDay = workingCase.readyPickupPromise.min.timeOfDay;
-    maxType = workingCase.readyPickupPromise.max.type;
-    maxDeltaHours = workingCase.readyPickupPromise.max.deltaHours;
-    maxDeltaBusinessDays = workingCase.readyPickupPromise.max.deltaBusinessDays;
-    maxTimeOfDay = workingCase.readyPickupPromise.max.timeOfDay;
+    minType = workingCase.readyPickUpPromise.min.type;
+    minDeltaHours = workingCase.readyPickUpPromise.min.deltaHours;
+    minDeltaBusinessDays = workingCase.readyPickUpPromise.min.deltaBusinessDays;
+    minTimeOfDay = workingCase.readyPickUpPromise.min.timeOfDay;
+    maxType = workingCase.readyPickUpPromise.max.type;
+    maxDeltaHours = workingCase.readyPickUpPromise.max.deltaHours;
+    maxDeltaBusinessDays = workingCase.readyPickUpPromise.max.deltaBusinessDays;
+    maxTimeOfDay = workingCase.readyPickUpPromise.max.timeOfDay;
 
-    let readyPickupPromiseMin= getPromise(minType, nowDateTime, minDeltaHours, nextBusinessDays, minDeltaBusinessDays, minTimeOfDay);
-    let readyPickupPromiseMax= getPromise(maxType, nowDateTime, maxDeltaHours, nextBusinessDays, maxDeltaBusinessDays, maxTimeOfDay);
+    let readyPickUpPromiseMin= getPromise(minType, nowDateTime, minDeltaHours, nextBusinessDays, minDeltaBusinessDays, minTimeOfDay);
+    let readyPickUpPromiseMax= getPromise(maxType, nowDateTime, maxDeltaHours, nextBusinessDays, maxDeltaBusinessDays, maxTimeOfDay);
 
     res.send({
         pack_promise_min: packPromiseMin,
@@ -216,8 +212,8 @@ const casesListBucle = (caseItem, validateBusinessDay, nowDateTime, nextBusiness
         ship_promise_max: shipPromiseMax,
         delivery_promise_min: deliveryPromiseMin,
         delivery_promise_max: deliveryPromiseMax,
-        ready_pickup_promise_min: readyPickupPromiseMin,
-        ready_pickup_promise_max: readyPickupPromiseMax,
+        ready_pickup_promise_min: readyPickUpPromiseMin,
+        ready_pickup_promise_max: readyPickUpPromiseMax,
     });
 
     return true;
@@ -241,7 +237,7 @@ orderRouter.route('/promises')
     try {
         const nowDateTime = moment(new Date()).format('YYYY-MM-DD');
         const nextBusinessDays = await getNextBussinessDays();
-        const rules = await getRules(6);    // id order
+        const rules = await getRules(1);    // id order
 
         const dayType = rules.availability.byRequestTime.dayType;
         const fromTimeOfDay = rules.availability.byRequestTime.fromTimeOfDay;
@@ -291,18 +287,25 @@ orderRouter.route('/promises')
         }
 
         let priority = 0;
+        let result = false;
 
         for (let i = 0; i < casesList.length; i ++) {
             priority ++;
             
             if (casesList[i].priority === priority) {
                 if (casesListBucle(casesList[i], validateBusinessDay, nowDateTime, nextBusinessDays)) {
+                    result = true;
                     i = casesList.length;
+                }
+                else {
+                    result = false;
                 }
             }
         }
 
-        res.send('promises');
+        if (!result) {
+            res.send(promiseNull());
+        }
     } 
     catch (error) {
         console.log(error);
