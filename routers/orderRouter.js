@@ -61,6 +61,12 @@ orderRouter.route('/methods/')
     }
 });
 
+const getWeightTotal = (idOrder) => {
+    const order = orderList.filter(item => item.id == idOrder);
+
+    return order[0].lineItems.reduce((total, value) => Number(total.weight) + Number(value.weight));
+}
+
 const getNextBussinessDays = async () => {
     const response = await melonn.getOffDaysList();
     
@@ -244,7 +250,7 @@ const promiseNull = () => {
     });
 }
 
-orderRouter.route('/promises/:id')
+orderRouter.route('/promises/:id/:idOrder')
 .get(async (req, res) => {
     try {
         const nowDateTime = moment(new Date()).format('YYYY-MM-DD');
@@ -257,7 +263,7 @@ orderRouter.route('/promises/:id')
 
         const casesList = rules.promisesParameters.cases;
 
-        const validateWeight = getValidateWeight(rules, 100); // weight order
+        const validateWeight = getValidateWeight(rules, getWeightTotal(req.params.idOrder)); // weight order
         const validateBusinessDay = getValidateBusinessDay(nextBusinessDays, nowDateTime);
         const validateTimeOfDay = getValidateTimeOfDay(fromTimeOfDay, toTimeOfDay);
 
